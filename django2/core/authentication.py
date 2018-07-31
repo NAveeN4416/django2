@@ -11,6 +11,27 @@ from django.conf import settings
 from django.contrib.auth.hashers import check_password
 
 
+import os
+from django.core.mail import EmailMessage
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_bytes, force_text
+from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
+from django.template.loader import render_to_string
+from .models import  auth_levels
+
+####
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils import six
+
+class TokenGenerator(PasswordResetTokenGenerator):
+	def _make_hash_value(self, user, timestamp):
+		return (
+            	six.text_type(user.pk) + six.text_type(timestamp) +
+            	six.text_type(user.username)  )
+
+account_activation_token = TokenGenerator()
+####
+
 class Authentication:
   
     def signup(request):
@@ -101,5 +122,62 @@ class Authentication:
             return None
         except User.DoesNotExist:
             return 0
-            
+
+class secure:
+  
+    def __init__(self):
+      pass
+
+    def send_email_verification(request,ref_id,flag):
+      flag 		 = flag
+      if flag=="":
+        path = 'activate'
+      else:
+        path = 'req_chang_pass'
+      user         = User.objects.get(pk=ref_id)
+      current_site = get_current_site(request)
+      mail_subject = 'Activate Your Django Account'
+      message      = render_to_string('registration/verify_email.html', {
+                                                              'user' 	: user.username,
+                                                              'domain': current_site.domain,
+                                                              'uid'	  : urlsafe_base64_encode(force_bytes(user.pk)).decode(),
+                                                              'token'	: account_activation_token.make_token(user),
+                                                              'path'  : path,
+                                                              }
+                                        )
+      to_email     = user.email
+      email        = EmailMessage(mail_subject, message, to=[to_email])
+
+      if email.send():
+        return 1
+      else:
+        return 0
+
+    def verify_email(uidb64, token):
+      try:
+        uid  = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+      except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+      if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        if user.is_active:
+          return user
+        else:
+          return 0
+      else:
+        return 1
+
+    def password_changed(request,user):
+      Subject = 'Subject'
+      Body    = render_to_string('registration/chang_pass_success.html',{'user':user})
+      email   = EmailMessage(Subject, Body, to=[user.email])
+      if email.send():
+        return 1
+      else:
+        return 0		
+
+
     
