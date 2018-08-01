@@ -128,12 +128,8 @@ class secure:
     def __init__(self):
       pass
 
-    def send_email_verification(request,ref_id,flag):
-      flag 		 = flag
-      if flag=="":
-        path = 'activate'
-      else:
-        path = 'req_chang_pass'
+    def send_email_verification(request,ref_id,path):
+		
       user         = User.objects.get(pk=ref_id)
       current_site = get_current_site(request)
       mail_subject = 'Activate Your Django Account'
