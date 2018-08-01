@@ -106,15 +106,8 @@ class Authentication:
             pwd_valid   = check_password(password, user.password)
 
             if pwd_valid:
-                try:
-                    user = User.objects.get(username=username)
-                except User.DoesNotExist:
-                    user = User(username=username)
-                    user.is_staff = False
-                    user.is_superuser = False
-                    user.save()
+                user = User.objects.get(username=username)
                 return user
-
             return None
         except User.DoesNotExist:
             return 0
@@ -124,9 +117,9 @@ class secure:
     def __init__(self):
       pass
 
-    def send_email_verification(request,ref_id,path):
+    def send_email_verification(request,user_id,path):
 		
-      user         = User.objects.get(pk=ref_id)
+      user         = User.objects.get(pk=user_id)
       current_site = get_current_site(request)
       mail_subject = 'Activate Your Django Account'
       message      = render_to_string('registration/verify_email.html', {
