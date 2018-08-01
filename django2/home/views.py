@@ -21,3 +21,7 @@ from django.http import HttResponse ,HttpRequest, JsonResponse
 constants = {
               'User' : User
               }
+
+
+def view(request):
+  pass
