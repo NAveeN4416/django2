@@ -94,11 +94,7 @@ class Authentication:
             session.delete() for session in unexpired_sessions
             if str(user_id) == session.get_decoded().get('_auth_user_id')
             ]
-
-        if settings.LOGOUT_REASON==reason:
-            messages.error(request,'You Can`t Access Admin Dashboard')
-            settings.LOGOUT_REASON = ""
-
+        logout_reason(request)
         return redirect('login')
 
 
@@ -175,5 +171,11 @@ class secure:
       else:
         return 0		
 
+def logout_reason(request):
+    if settings.LOGOUT_REASON=='1':
+        messages.error(request,settings.MESSAGES_FLAG['cant_access'])
+    elif settings.LOGOUT_REASON=='':
+        messages.error(request,settings.MESSAGES_FLAG['logout_success'])
+    settings.LOGOUT_REASON = ""    
 
     
